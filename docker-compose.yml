@@ -1,0 +1,98 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres-backend
+      - DB_PORT=5432
+      - DB_USER=${BACKEND_DB_USER:-diealog_backend}
+      - DB_PASS=${BACKEND_DB_PASS:-diealog_backend_password}
+      - DB_NAME=${BACKEND_DB_NAME:-diealog_backend}
+    volumes:
+      - ./.env:/app/.env:ro
+    depends_on:
+      postgres-backend:
+        condition: service_healthy
+    networks:
+      - diealog-backend-net
+      - diealog-internal-net
+
+  crypto:
+    build:
+      context: ./crypto
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${CRYPTO_PORT:-8081}:8080"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres-crypto
+      - DB_PORT=5432
+      - DB_USER=${CRYPTO_DB_USER:-diealog_crypto}
+      - DB_PASS=${CRYPTO_DB_PASS:-diealog_crypto_password}
+      - DB_NAME=${CRYPTO_DB_NAME:-diealog_crypto}
+    volumes:
+      - ./.env:/app/.env:ro
+    depends_on:
+      postgres-crypto:
+        condition: service_healthy
+    networks:
+      - diealog-crypto-net
+      - diealog-internal-net
+
+  postgres-backend:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: ${BACKEND_DB_USER:-diealog_backend}
+      POSTGRES_PASSWORD: ${BACKEND_DB_PASS:-diealog_backend_password}
+      POSTGRES_DB: ${BACKEND_DB_NAME:-diealog_backend}
+    ports:
+      - "${HOST_BACKEND_DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${BACKEND_DB_USER:-diealog_backend} -d ${BACKEND_DB_NAME:-diealog_backend}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-backend-data:/var/lib/postgresql/data
+    networks:
+      - diealog-backend-net
+
+  postgres-crypto:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: ${CRYPTO_DB_USER:-diealog_crypto}
+      POSTGRES_PASSWORD: ${CRYPTO_DB_PASS:-diealog_crypto_password}
+      POSTGRES_DB: ${CRYPTO_DB_NAME:-diealog_crypto}
+    ports:
+      - "${HOST_CRYPTO_DB_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CRYPTO_DB_USER:-diealog_crypto} -d ${CRYPTO_DB_NAME:-diealog_crypto}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-crypto-data:/var/lib/postgresql/data
+    networks:
+      - diealog-crypto-net
+
+volumes:
+  postgres-backend-data:
+  postgres-crypto-data:
+
+networks:
+  diealog-backend-net:
+    driver: bridge
+  diealog-crypto-net:
+    driver: bridge
+  diealog-internal-net:
+    driver: bridge
