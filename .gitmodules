@@ -1,0 +1,6 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/DIEALOG/DIEALOG-backend.git
+[submodule "crypto"]
+	path = crypto
+	url = https://github.com/DIEALOG/DIEALOG-crypto.git
