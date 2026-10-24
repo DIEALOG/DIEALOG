@@ -1,1 +1,4 @@
 .env
+schemathesis.toml
+.schemathesis/
+.hypothesis/
