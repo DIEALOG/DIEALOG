@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+concurrency:
+  group: diealog-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy the DIEALOG stack
+    runs-on: [ self-hosted, Linux, X64 ]
+
+    env:
+      DEPLOY_DIR: /home/hello/deploy/diealog
+
+    steps:
+      # The stack is deployed from the umbrella repository, which pins backend
+      # and crypto as submodules. Updating them with --remote means a push to
+      # any of the three repositories deploys the current main of each one.
+      - name: Update the deployment checkout
+        run: |
+          cd "$DEPLOY_DIR/DIEALOG"
+          git fetch origin
+          git reset --hard origin/master
+          git submodule sync --recursive
+          git submodule update --init --remote --recursive
+          echo "backend: $(git -C backend log --oneline -1)"
+          echo "crypto:  $(git -C crypto log --oneline -1)"
+
+      - name: Build and restart the stack
+        run: "$DEPLOY_DIR/DIEALOG/scripts/deploy.sh"
