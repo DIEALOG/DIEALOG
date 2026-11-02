@@ -22,6 +22,7 @@ services:
     networks:
       - diealog-backend-net
       - diealog-internal-net
+      - diealog-network
 
   crypto:
     build:
