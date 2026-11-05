@@ -22,8 +22,8 @@ env_dir="${DEPLOY_ENV_DIR:-$(dirname "$repo_root")/env}"
 
 if [ -d "$env_dir" ]; then
   install -m 600 "$env_dir/root.env" .env
-  install -m 600 "$env_dir/backend.env" env/backend.env
-  install -m 600 "$env_dir/crypto.env" env/crypto.env
+  install -m 644 "$env_dir/backend.env" env/backend.env
+  install -m 644 "$env_dir/crypto.env" env/crypto.env
 fi
 
 for required in .env env/backend.env env/crypto.env; do
