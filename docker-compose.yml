@@ -4,12 +4,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    # The Go services read their configuration from /app/.env only (viper reads
-    # the file, not the process environment), so each one gets its own env file.
     user: "${APP_UID:-1000}:${APP_GID:-1000}"
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     volumes:
+      - profile-uploads:/app/public
       - type: bind
         source: ./env/backend.env
         target: /app/.env
@@ -99,6 +98,7 @@ services:
 volumes:
   postgres-backend-data:
   postgres-crypto-data:
+  profile-uploads:
 
 networks:
   diealog-network:
